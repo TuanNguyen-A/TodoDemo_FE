@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Todo List demo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <link rel="stylesheet" href="task.css">
+    <script src="https://kit.fontawesome.com/8311525d02.js" crossorigin="anonymous"></script>
+</head>
+
+<body>
+    <h2 class="text-center">Todo List Demo</h2>
+    <div class="container-sm border border-dark h-75 w-50 position-relative">
+        <div id="card-container" class="d-flex flex-column flex-wrap  w-100  ">
+
+            <!-- <div class="card">
+                <div class="card-body d-flex flex-row justify-content-between">
+                    <h5 class="card-title">Card title</h5>
+                    <div class="btn-container">
+                        <a href="#">view</a>
+                        <a href="#">edit</a>
+                        <a href="#">delete</a>
+                    </div>
+                </div>
+            </div> -->
+
+        </div>
+        <div class="edit-todotask ">
+            <input id="edit-content-input" class="rounded" placeholder="Edit for content" disabled="true">
+            <input id="edit-deadline-input" class="rounded" placeholder="Edit for deadline" disabled="true">
+            <button id="edit-btn" class="rounded" disabled="true">Edit</button>
+        </div>
+
+        <div class="add-todotask ">
+            <input id="add-content-input" class="rounded" placeholder="content">
+            <input id="add-deadline-input" class="rounded" placeholder="deadline">
+            <button id="add-btn" class="rounded">Add</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
+        crossorigin="anonymous"></script>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.2.2/axios.min.js"
+        integrity="sha512-QTnb9BQkG4fBYIt9JGvYmxPpd6TBeKp6lsUrtiVQsrJ9sb33Bn9s0wMQO9qVBFbPX3xHRAsBHvXlcsrnJjExjg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <script>
+        BaseURL = "https://localhost:44325/api/TodoTask/"
+        editForId = 0
+        listId = getUrlVars()['listId']
+        listId = listId.replace('#', '')
+        //Get List
+        axios
+            .get(BaseURL + "get-by-list-id/" + listId)
+            .then((response) => {
+                console.log(response)
+                arr = response.data
+                for (i = 0; i < arr.length; i++) {
+                    item = arr[i]
+                    day = new Date(item.deadline)
+                    deadline = day.toLocaleDateString("vi-VN")
+
+                    $("#card-container").append(`
+                        <div class="card">
+                            <div class="card-body d-flex flex-row justify-content-between">
+                                <h5 class="card-title">${item.content}</h5>
+                                <p class="card-title">Deadline :${deadline}</p>
+                                <div class="btn-container">
+                                    <a href="#" onclick=" editTask(${item.id});">edit</a>
+                                    <a href="#" onclick=" deleteTask(${item.id});">delete</a>
+                                </div>
+                            </div>
+                        </div>
+                    `);
+                }
+            })
+            .catch((err) => console.log(err));
+
+        //Add new
+        $("#add-btn").on("click", function (e) {
+            Content = $("#add-content-input").val()
+            Deadline = $("#add-deadline-input").val()
+            axios
+                .post(BaseURL + "create", { 
+                    TodoListId: listId,
+                    Content, 
+                    Deadline
+                })
+                .then((res) => {
+                    console.log(res)
+                    location.reload();
+                })
+                .catch((err) => console.log(err));
+        })
+
+        //Edit
+        $("#edit-btn").on("click", function (e) {
+            Content = $("#edit-content-input").val()
+            Deadline = $("#edit-deadline-input").val()
+            axios
+                .put(BaseURL + "update", {
+                    Id: editForId,
+                    Content,
+                    Deadline
+                })
+                .then((res) => {
+                    console.log(res)
+                    location.reload();
+                })
+                .catch((err) => console.log(err));
+        })
+
+        function editTask(id) {
+            console.log("edit ", id)
+            editForId = id
+            $("#edit-content-input").prop("disabled", false)
+            $("#edit-deadline-input").prop("disabled", false)
+            $("#edit-btn").prop("disabled", false)
+        }
+
+        function deleteTask(id) {
+            console.log("delete ", id)
+            axios
+                .delete(BaseURL + id)
+                .then((res) => {
+                    console.log(res)
+                    location.reload();
+                })
+                .catch((err) => console.log(err));
+        }
+
+        //Util
+        function getUrlVars() {
+            var vars = [], hash;
+            var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+            for (var i = 0; i < hashes.length; i++) {
+                hash = hashes[i].split('=');
+                vars.push(hash[0]);
+                vars[hash[0]] = hash[1];
+            }
+            return vars;
+        }
+    </script>
+</body>
+
+</html>
